@@ -3,13 +3,413 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RaceFun 2</title>
-<link rel="stylesheet" href="style.css">
+<title>RaceFun 2 - Enhanced</title>
+<style>
+body {
+  margin: 0;
+  background: #222;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h1 {
+  margin: 10px 0;
+  color: #ffcc00;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+}
+
+canvas {
+  background: #333;
+  display: block;
+  margin: 0 auto;
+  border: 3px solid #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+}
+
+p {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+button {
+  background: #ffcc00;
+  color: #222;
+  border: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+  transition: all 0.3s;
+}
+
+button:hover {
+  background: #ffdd44;
+  transform: scale(1.05);
+}
+
+#gameInfo {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 10px 0;
+}
+
+.info-box {
+  background: rgba(255, 204, 0, 0.2);
+  padding: 5px 15px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+#instructions {
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+</style>
 </head>
 <body>
-<h1>🏎️ RaceFun 2</h1>
+<h1>🏎️ RaceFun 2 - Enhanced</h1>
+<div id="gameInfo">
+  <div class="info-box">Score: <span id="scoreDisplay">0</span></div>
+  <div class="info-box">High Score: <span id="highScoreDisplay">0</span></div>
+  <div class="info-box">Speed: <span id="speedDisplay">5</span></div>
+</div>
 <canvas id="gameCanvas" width="400" height="600"></canvas>
+<div>
+  <button id="startButton">Start Game</button>
+  <button id="pauseButton">Pause</button>
+</div>
 <p>Use ← → arrows or A/D to move your car. Avoid the yellow obstacles!</p>
-<script src="script.js"></script>
+<div id="instructions">
+  <p>Collect power-ups: <span style="color:#00ff00">Green</span> = Slow Down, <span style="color:#ff00ff">Pink</span> = Score Boost, <span style="color:#00ffff">Cyan</span> = Shield</p>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const highScoreDisplay = document.getElementById('highScoreDisplay');
+const speedDisplay = document.getElementById('speedDisplay');
+const startButton = document.getElementById('startButton');
+const pauseButton = document.getElementById('pauseButton');
+
+// Game constants
+const CAR_WIDTH = 40;
+const CAR_HEIGHT = 70;
+const POWERUP_TYPES = ['slow', 'boost', 'shield'];
+const POWERUP_COLORS = {
+  slow: '#00ff00',
+  boost: '#ff00ff',
+  shield: '#00ffff'
+};
+
+// Game state
+let car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
+let obstacles = [];
+let powerups = [];
+let keys = {};
+let score = 0;
+let highScore = localStorage.getItem('racefun2_highscore') || 0;
+let speed = 5;
+let gameOver = false;
+let gamePaused = false;
+let shieldActive = false;
+let shieldTimer = 0;
+let animationId;
+let lastTime = 0;
+let gameStarted = false;
+
+// Initialize displays
+highScoreDisplay.textContent = highScore;
+
+// Controls
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  // Prevent arrow keys from scrolling the page
+  if(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+document.addEventListener('keyup', e => keys[e.key] = false);
+
+// Button event listeners
+startButton.addEventListener('click', startGame);
+pauseButton.addEventListener('click', togglePause);
+
+// Game functions
+function startGame() {
+  if (!gameStarted) {
+    resetGame();
+    gameStarted = true;
+    gamePaused = false;
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(gameLoop);
+    startButton.textContent = 'Restart Game';
+  } else {
+    resetGame();
+    gamePaused = false;
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(gameLoop);
+  }
+}
+
+function togglePause() {
+  if (!gameStarted) return;
+  
+  gamePaused = !gamePaused;
+  pauseButton.textContent = gamePaused ? 'Resume' : 'Pause';
+  
+  if (!gamePaused) {
+    lastTime = performance.now();
+    animationId = requestAnimationFrame(gameLoop);
+  }
+}
+
+function resetGame() {
+  car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
+  obstacles = [];
+  powerups = [];
+  score = 0;
+  speed = 5;
+  gameOver = false;
+  shieldActive = false;
+  shieldTimer = 0;
+  updateDisplays();
+}
+
+function createObstacle() {
+  const width = 40 + Math.random() * 60;
+  const x = Math.random() * (canvas.width - width);
+  obstacles.push({ x, y: -60, width, height: 40 });
+}
+
+function createPowerup() {
+  const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+  const x = Math.random() * (canvas.width - 30);
+  powerups.push({ x, y: -30, width: 30, height: 30, type });
+}
+
+function update(deltaTime) {
+  // Move car
+  if (keys['ArrowLeft'] || keys['a']) car.x -= 6;
+  if (keys['ArrowRight'] || keys['d']) car.x += 6;
+
+  // Clamp car position
+  car.x = Math.max(0, Math.min(canvas.width - car.width, car.x));
+
+  // Move obstacles
+  obstacles.forEach(o => o.y += speed);
+  obstacles = obstacles.filter(o => o.y < canvas.height + 50);
+
+  // Move powerups
+  powerups.forEach(p => p.y += speed);
+  powerups = powerups.filter(p => p.y < canvas.height + 50);
+
+  // Check collisions with obstacles
+  if (!shieldActive) {
+    for (let o of obstacles) {
+      if (
+        car.x < o.x + o.width &&
+        car.x + car.width > o.x &&
+        car.y < o.y + o.height &&
+        car.y + car.height > o.y
+      ) {
+        gameOver = true;
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('racefun2_highscore', highScore);
+          highScoreDisplay.textContent = highScore;
+        }
+      }
+    }
+  }
+
+  // Check collisions with powerups
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    if (
+      car.x < p.x + p.width &&
+      car.x + car.width > p.x &&
+      car.y < p.y + p.height &&
+      car.y + car.height > p.y
+    ) {
+      applyPowerup(p.type);
+      powerups.splice(i, 1);
+    }
+  }
+
+  // Update shield timer
+  if (shieldActive) {
+    shieldTimer -= deltaTime;
+    if (shieldTimer <= 0) {
+      shieldActive = false;
+    }
+  }
+
+  // Update score and difficulty
+  score += Math.floor(speed);
+  if (score % 200 === 0) speed += 0.5;
+  
+  // Randomly spawn obstacles and powerups
+  if (Math.random() < 0.03) createObstacle();
+  if (Math.random() < 0.01) createPowerup();
+  
+  updateDisplays();
+}
+
+function applyPowerup(type) {
+  switch(type) {
+    case 'slow':
+      speed = Math.max(3, speed - 2);
+      break;
+    case 'boost':
+      score += 100;
+      break;
+    case 'shield':
+      shieldActive = true;
+      shieldTimer = 5000; // 5 seconds
+      break;
+  }
+}
+
+function updateDisplays() {
+  scoreDisplay.textContent = score;
+  speedDisplay.textContent = speed.toFixed(1);
+}
+
+function draw() {
+  // Clear canvas
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw road
+  ctx.fillStyle = '#444';
+  ctx.fillRect(60, 0, canvas.width - 120, canvas.height);
+
+  // Draw road markings
+  ctx.strokeStyle = '#ccc';
+  ctx.setLineDash([20, 20]);
+  ctx.beginPath();
+  ctx.moveTo(canvas.width/2, 0);
+  ctx.lineTo(canvas.width/2, canvas.height);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw side barriers
+  ctx.fillStyle = '#888';
+  ctx.fillRect(0, 0, 60, canvas.height);
+  ctx.fillRect(canvas.width - 60, 0, 60, canvas.height);
+
+  // Draw car with shield effect
+  if (shieldActive) {
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(car.x + car.width/2, car.y + car.height/2, Math.max(car.width, car.height)/2 + 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  ctx.fillStyle = 'red';
+  ctx.fillRect(car.x, car.y, car.width, car.height);
+  
+  // Draw car details
+  ctx.fillStyle = 'black';
+  ctx.fillRect(car.x + 5, car.y + 5, car.width - 10, 15); // windshield
+  ctx.fillRect(car.x + 5, car.y + car.height - 20, car.width - 10, 15); // rear window
+  
+  // Draw obstacles
+  ctx.fillStyle = 'yellow';
+  obstacles.forEach(o => {
+    ctx.fillRect(o.x, o.y, o.width, o.height);
+    // Add obstacle details
+    ctx.fillStyle = 'orange';
+    ctx.fillRect(o.x + 5, o.y + 5, o.width - 10, 10);
+    ctx.fillStyle = 'yellow';
+  });
+
+  // Draw powerups
+  powerups.forEach(p => {
+    ctx.fillStyle = POWERUP_COLORS[p.type];
+    ctx.beginPath();
+    ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Add powerup icon
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    let symbol = '?';
+    switch(p.type) {
+      case 'slow': symbol = '↓'; break;
+      case 'boost': symbol = '↑'; break;
+      case 'shield': symbol = '⛨'; break;
+    }
+    
+    ctx.fillText(symbol, p.x + p.width/2, p.y + p.height/2);
+  });
+
+  // Draw score
+  ctx.fillStyle = 'white';
+  ctx.font = '20px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('Score: ' + score, 10, 30);
+
+  // Draw speed
+  ctx.textAlign = 'right';
+  ctx.fillText('Speed: ' + speed.toFixed(1), canvas.width - 10, 30);
+
+  // Draw game over screen
+  if (gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, canvas.height/2 - 80, canvas.width, 160);
+    ctx.fillStyle = 'white';
+    ctx.font = '26px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('💥 Crash!', canvas.width/2, canvas.height/2 - 30);
+    ctx.font = '20px Arial';
+    ctx.fillText('Score: ' + score, canvas.width/2, canvas.height/2);
+    ctx.fillText('High Score: ' + highScore, canvas.width/2, canvas.height/2 + 30);
+    ctx.fillText('Press Start to play again', canvas.width/2, canvas.height/2 + 60);
+  }
+
+  // Draw pause screen
+  if (gamePaused && !gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
+    ctx.fillStyle = 'white';
+    ctx.font = '26px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('⏸️ Game Paused', canvas.width/2, canvas.height/2);
+    ctx.font = '18px Arial';
+    ctx.fillText('Press Resume to continue', canvas.width/2, canvas.height/2 + 30);
+  }
+}
+
+function gameLoop(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const deltaTime = timestamp - lastTime;
+  lastTime = timestamp;
+
+  if (!gamePaused && !gameOver) {
+    update(deltaTime);
+  }
+  
+  draw();
+  
+  if (!gameOver) {
+    animationId = requestAnimationFrame(gameLoop);
+  }
+}
+
+// Initial draw
+draw();
+</script>
 </body>
 </html>
