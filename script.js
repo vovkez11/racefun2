@@ -1,65 +1,102 @@
-const gameContainer = document.getElementById('gameContainer');
-const player = document.getElementById('player');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-let playerX = 130;
-let enemies = [];
-let gameOver = false;
+const CAR_WIDTH = 40;
+const CAR_HEIGHT = 70;
+let car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
+let obstacles = [];
+let keys = {};
 let score = 0;
+let speed = 5;
+let gameOver = false;
 
-// Move player
-document.addEventListener('keydown', (e) => {
-  if (gameOver) return;
-  if (e.key === 'ArrowLeft' && playerX > 0) playerX -= 10;
-  if (e.key === 'ArrowRight' && playerX < 260) playerX += 10;
-  player.style.left = playerX + 'px';
-});
+// controls
+document.addEventListener('keydown', e => keys[e.key] = true);
+document.addEventListener('keyup', e => keys[e.key] = false);
 
-// Create enemies
-function createEnemy() {
-  const enemy = document.createElement('div');
-  enemy.classList.add('enemy');
-  enemy.style.left = Math.floor(Math.random() * 260) + 'px';
-  enemy.style.top = '-60px';
-  gameContainer.appendChild(enemy);
-  enemies.push(enemy);
+// spawn obstacles
+function createObstacle() {
+  const width = 40 + Math.random() * 60;
+  const x = Math.random() * (canvas.width - width);
+  obstacles.push({ x, y: -60, width, height: 40 });
 }
 
-function updateGame() {
-  if (gameOver) return;
+// update game
+function update() {
+  if (keys['ArrowLeft'] || keys['a']) car.x -= 6;
+  if (keys['ArrowRight'] || keys['d']) car.x += 6;
 
-  enemies.forEach((enemy, i) => {
-    let top = parseInt(enemy.style.top);
-    top += 5;
-    enemy.style.top = top + 'px';
+  // clamp car
+  car.x = Math.max(0, Math.min(canvas.width - car.width, car.x));
 
-    if (top > 400) {
-      enemy.remove();
-      enemies.splice(i, 1);
-      score++;
-    }
+  // move obstacles
+  obstacles.forEach(o => o.y += speed);
+  obstacles = obstacles.filter(o => o.y < canvas.height + 50);
 
-    // Collision
-    const enemyRect = enemy.getBoundingClientRect();
-    const playerRect = player.getBoundingClientRect();
+  // collision
+  for (let o of obstacles) {
     if (
-      enemyRect.left < playerRect.right &&
-      enemyRect.right > playerRect.left &&
-      enemyRect.top < playerRect.bottom &&
-      enemyRect.bottom > playerRect.top
+      car.x < o.x + o.width &&
+      car.x + car.width > o.x &&
+      car.y < o.y + o.height &&
+      car.y + car.height > o.y
     ) {
-      endGame();
+      gameOver = true;
     }
-  });
+  }
 
-  requestAnimationFrame(updateGame);
+  score++;
+  if (score % 200 === 0) speed += 0.5;
+  if (Math.random() < 0.03) createObstacle();
 }
 
-function endGame() {
-  gameOver = true;
-  alert(`💥 Game Over! Your score: ${score}`);
-  window.location.reload();
+// draw everything
+function draw() {
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // road
+  ctx.fillStyle = '#444';
+  ctx.fillRect(60, 0, canvas.width - 120, canvas.height);
+
+  // center line
+  ctx.strokeStyle = '#ccc';
+  ctx.setLineDash([20, 20]);
+  ctx.beginPath();
+  ctx.moveTo(canvas.width/2, 0);
+  ctx.lineTo(canvas.width/2, canvas.height);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // car
+  ctx.fillStyle = 'red';
+  ctx.fillRect(car.x, car.y, car.width, car.height);
+
+  // obstacles
+  ctx.fillStyle = 'yellow';
+  obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.width, o.height));
+
+  // score
+  ctx.fillStyle = 'white';
+  ctx.font = '20px Arial';
+  ctx.fillText('Score: ' + score, 10, 30);
+
+  // game over
+  if (gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, canvas.height/2 - 50, canvas.width, 120);
+    ctx.fillStyle = 'white';
+    ctx.font = '26px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('💥 Crash! Score: ' + score, canvas.width/2, canvas.height/2);
+  }
 }
 
-// Game loop
-setInterval(createEnemy, 1000);
-updateGame();
+// game loop
+function loop() {
+  if (!gameOver) update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
