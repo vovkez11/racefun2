@@ -3,20 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RaceFun 2 - Enhanced</title>
+<title>RaceFun 2 - Mobile Edition</title>
 <style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   margin: 0;
   background: #222;
   color: white;
   font-family: Arial, sans-serif;
   text-align: center;
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1 {
   margin: 10px 0;
   color: #ffcc00;
   text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+  font-size: clamp(18px, 5vw, 28px);
+}
+
+#gameContainer {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 canvas {
@@ -26,26 +46,32 @@ canvas {
   border: 3px solid #fff;
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+  width: 100%;
+  max-width: 400px;
+  height: auto;
 }
 
 p {
   margin: 10px 0;
-  font-size: 18px;
+  font-size: clamp(14px, 4vw, 18px);
+  padding: 0 10px;
 }
 
 button {
   background: #ffcc00;
   color: #222;
   border: none;
-  padding: 10px 20px;
-  font-size: 18px;
-  border-radius: 5px;
+  padding: 12px 20px;
+  font-size: clamp(16px, 4vw, 18px);
+  border-radius: 8px;
   cursor: pointer;
-  margin: 10px;
+  margin: 8px;
   transition: all 0.3s;
+  min-width: 120px;
+  touch-action: manipulation;
 }
 
-button:hover {
+button:hover, button:active {
   background: #ffdd44;
   transform: scale(1.05);
 }
@@ -53,15 +79,17 @@ button:hover {
 #gameInfo {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 15px;
   margin: 10px 0;
+  flex-wrap: wrap;
 }
 
 .info-box {
   background: rgba(255, 204, 0, 0.2);
-  padding: 5px 15px;
-  border-radius: 5px;
-  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: clamp(14px, 4vw, 16px);
+  min-width: 100px;
 }
 
 #instructions {
@@ -69,23 +97,144 @@ button:hover {
   margin: 10px auto;
   padding: 10px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: clamp(12px, 3.5vw, 14px);
+}
+
+#mobileControls {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  touch-action: manipulation;
+}
+
+.control-btn {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: white;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.control-btn:active {
+  background: rgba(255, 204, 0, 0.5);
+}
+
+#leftBtn {
+  margin-right: auto;
+}
+
+#rightBtn {
+  margin-left: auto;
+}
+
+#gameButtons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-height: 700px) {
+  h1 {
+    margin: 5px 0;
+  }
+  
+  #gameInfo {
+    margin: 5px 0;
+  }
+  
+  #mobileControls {
+    padding: 10px;
+  }
+  
+  .control-btn {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 400px) {
+  canvas {
+    border-width: 2px;
+  }
+  
+  .control-btn {
+    width: 65px;
+    height: 65px;
+    font-size: 24px;
+  }
+  
+  button {
+    min-width: 100px;
+    padding: 10px 15px;
+  }
+}
+
+/* Orientation warning */
+#orientationWarning {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 100;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+}
+
+#orientationWarning p {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-height: 400px) and (orientation: landscape) {
+  #orientationWarning {
+    display: flex;
+  }
 }
 </style>
 </head>
 <body>
-<h1>🏎️ RaceFun 2 - Enhanced</h1>
+<div id="orientationWarning">
+  <p>🔁 Please rotate your device to portrait mode for the best gaming experience!</p>
+  <button onclick="document.getElementById('orientationWarning').style.display='none'">Continue Anyway</button>
+</div>
+
+<h1>🏎️ RaceFun 2 - Mobile Edition</h1>
 <div id="gameInfo">
   <div class="info-box">Score: <span id="scoreDisplay">0</span></div>
   <div class="info-box">High Score: <span id="highScoreDisplay">0</span></div>
   <div class="info-box">Speed: <span id="speedDisplay">5</span></div>
 </div>
-<canvas id="gameCanvas" width="400" height="600"></canvas>
-<div>
+
+<div id="gameContainer">
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+</div>
+
+<div id="mobileControls">
+  <div id="leftBtn" class="control-btn">←</div>
+  <div id="rightBtn" class="control-btn">→</div>
+</div>
+
+<div id="gameButtons">
   <button id="startButton">Start Game</button>
   <button id="pauseButton">Pause</button>
 </div>
-<p>Use ← → arrows or A/D to move your car. Avoid the yellow obstacles!</p>
+
+<p>Use ← → arrows, A/D keys, or touch controls to move your car. Avoid the yellow obstacles!</p>
 <div id="instructions">
   <p>Collect power-ups: <span style="color:#00ff00">Green</span> = Slow Down, <span style="color:#ff00ff">Pink</span> = Score Boost, <span style="color:#00ffff">Cyan</span> = Shield</p>
 </div>
@@ -98,6 +247,30 @@ const highScoreDisplay = document.getElementById('highScoreDisplay');
 const speedDisplay = document.getElementById('speedDisplay');
 const startButton = document.getElementById('startButton');
 const pauseButton = document.getElementById('pauseButton');
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+
+// Adjust canvas size for mobile
+function resizeCanvas() {
+  const container = document.getElementById('gameContainer');
+  const containerWidth = container.clientWidth;
+  
+  // Maintain aspect ratio
+  const aspectRatio = 400 / 600;
+  let newWidth = Math.min(containerWidth, 400);
+  let newHeight = newWidth / aspectRatio;
+  
+  canvas.style.width = newWidth + 'px';
+  canvas.style.height = newHeight + 'px';
+  
+  // Set actual canvas resolution
+  canvas.width = 400;
+  canvas.height = 600;
+}
+
+// Initial resize
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 // Game constants
 const CAR_WIDTH = 40;
@@ -124,11 +297,15 @@ let shieldTimer = 0;
 let animationId;
 let lastTime = 0;
 let gameStarted = false;
+let touchControls = {
+  left: false,
+  right: false
+};
 
 // Initialize displays
 highScoreDisplay.textContent = highScore;
 
-// Controls
+// Keyboard controls
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
   // Prevent arrow keys from scrolling the page
@@ -138,9 +315,74 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
+// Touch controls for mobile
+function setupTouchControls() {
+  // Left button
+  leftBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchControls.left = true;
+  });
+  
+  leftBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    touchControls.left = false;
+  });
+  
+  leftBtn.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    touchControls.left = false;
+  });
+  
+  // Right button
+  rightBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchControls.right = true;
+  });
+  
+  rightBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    touchControls.right = false;
+  });
+  
+  rightBtn.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    touchControls.right = false;
+  });
+  
+  // Swipe controls for the game area
+  let touchStartX = 0;
+  
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchStartX = e.touches[0].clientX;
+  });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!gameStarted || gamePaused || gameOver) return;
+    
+    const touchX = e.touches[0].clientX;
+    const diff = touchX - touchStartX;
+    
+    if (Math.abs(diff) > 10) {
+      if (diff > 0) {
+        // Swipe right
+        car.x = Math.min(canvas.width - car.width, car.x + 10);
+      } else {
+        // Swipe left
+        car.x = Math.max(0, car.x - 10);
+      }
+      touchStartX = touchX;
+    }
+  });
+}
+
 // Button event listeners
 startButton.addEventListener('click', startGame);
 pauseButton.addEventListener('click', togglePause);
+
+// Initialize touch controls
+setupTouchControls();
 
 // Game functions
 function startGame() {
@@ -196,9 +438,9 @@ function createPowerup() {
 }
 
 function update(deltaTime) {
-  // Move car
-  if (keys['ArrowLeft'] || keys['a']) car.x -= 6;
-  if (keys['ArrowRight'] || keys['d']) car.x += 6;
+  // Move car - check keyboard and touch controls
+  if (keys['ArrowLeft'] || keys['a'] || touchControls.left) car.x -= 6;
+  if (keys['ArrowRight'] || keys['d'] || touchControls.right) car.x += 6;
 
   // Clamp car position
   car.x = Math.max(0, Math.min(canvas.width - car.width, car.x));
@@ -407,6 +649,9 @@ function gameLoop(timestamp) {
     animationId = requestAnimationFrame(gameLoop);
   }
 }
+
+// Prevent context menu on long press
+document.addEventListener('contextmenu', e => e.preventDefault());
 
 // Initial draw
 draw();
