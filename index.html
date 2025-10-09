@@ -1,660 +1,741 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RaceFun 2 - Mobile Edition</title>
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaceFun 2 - Mobile Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-body {
-  margin: 0;
-  background: #222;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  overflow: hidden;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-}
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
 
-h1 {
-  margin: 10px 0;
-  color: #ffcc00;
-  text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
-  font-size: clamp(18px, 5vw, 28px);
-}
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
 
-#gameContainer {
-  position: relative;
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-}
+        h1 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 5px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+            letter-spacing: 1px;
+        }
 
-canvas {
-  background: #333;
-  display: block;
-  margin: 0 auto;
-  border: 3px solid #fff;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
-  width: 100%;
-  max-width: 400px;
-  height: auto;
-}
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+        }
 
-p {
-  margin: 10px 0;
-  font-size: clamp(14px, 4vw, 18px);
-  padding: 0 10px;
-}
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-button {
-  background: #ffcc00;
-  color: #222;
-  border: none;
-  padding: 12px 20px;
-  font-size: clamp(16px, 4vw, 18px);
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 8px;
-  transition: all 0.3s;
-  min-width: 120px;
-  touch-action: manipulation;
-}
+        .info-value {
+            font-weight: bold;
+            color: #ffcc00;
+            margin-top: 3px;
+        }
 
-button:hover, button:active {
-  background: #ffdd44;
-  transform: scale(1.05);
-}
+        canvas {
+            background: #111;
+            border-radius: 10px;
+            border: 3px solid #444;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: block;
+        }
 
-#gameInfo {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin: 10px 0;
-  flex-wrap: wrap;
-}
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 10px;
+        }
 
-.info-box {
-  background: rgba(255, 204, 0, 0.2);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: clamp(14px, 4vw, 16px);
-  min-width: 100px;
-}
+        button {
+            background: linear-gradient(to bottom, #ffcc00, #ff9900);
+            border: none;
+            border-radius: 50px;
+            color: #222;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #cc7a00, 0 6px 8px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s;
+            min-width: 140px;
+        }
 
-#instructions {
-  max-width: 500px;
-  margin: 10px auto;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: clamp(12px, 3.5vw, 14px);
-}
+        button:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #cc7a00, 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
 
-#mobileControls {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px;
-  max-width: 400px;
-  margin: 0 auto;
-  touch-action: manipulation;
-}
+        .touch-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+            padding: 0 10px;
+        }
 
-.control-btn {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  color: white;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
+        .touch-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            user-select: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
 
-.control-btn:active {
-  background: rgba(255, 204, 0, 0.5);
-}
+        .touch-btn:active {
+            background: rgba(255, 204, 0, 0.5);
+            transform: scale(0.95);
+        }
 
-#leftBtn {
-  margin-right: auto;
-}
+        .instructions {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.4;
+        }
 
-#rightBtn {
-  margin-left: auto;
-}
+        .powerup-info {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
 
-#gameButtons {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
+        .powerup-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
 
-@media (max-height: 700px) {
-  h1 {
-    margin: 5px 0;
-  }
-  
-  #gameInfo {
-    margin: 5px 0;
-  }
-  
-  #mobileControls {
-    padding: 10px;
-  }
-  
-  .control-btn {
-    width: 70px;
-    height: 70px;
-  }
-}
+        .powerup-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
 
-@media (max-width: 400px) {
-  canvas {
-    border-width: 2px;
-  }
-  
-  .control-btn {
-    width: 65px;
-    height: 65px;
-    font-size: 24px;
-  }
-  
-  button {
-    min-width: 100px;
-    padding: 10px 15px;
-  }
-}
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            display: none;
+        }
 
-/* Orientation warning */
-#orientationWarning {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 100;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  text-align: center;
-}
+        .game-over-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
+            border: 2px solid #ffcc00;
+        }
 
-#orientationWarning p {
-  font-size: 20px;
-  margin-bottom: 20px;
-}
+        .game-over h2 {
+            font-size: 2rem;
+            color: #ffcc00;
+            margin-bottom: 15px;
+        }
 
-@media (max-height: 400px) and (orientation: landscape) {
-  #orientationWarning {
-    display: flex;
-  }
-}
-</style>
+        .final-score {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            color: #fff;
+        }
+
+        .high-score {
+            font-size: 1.2rem;
+            color: #ffcc00;
+            margin-bottom: 20px;
+        }
+
+        @media (max-height: 700px) {
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 0;
+            }
+            
+            .game-info {
+                padding: 8px 12px;
+                font-size: 1rem;
+            }
+            
+            .touch-controls {
+                margin-top: 10px;
+            }
+            
+            .touch-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 35px;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 1rem;
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .game-info {
+                font-size: 0.9rem;
+            }
+            
+            .touch-btn {
+                width: 65px;
+                height: 65px;
+                font-size: 30px;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+                min-width: 110px;
+            }
+            
+            .instructions {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
-<div id="orientationWarning">
-  <p>🔁 Please rotate your device to portrait mode for the best gaming experience!</p>
-  <button onclick="document.getElementById('orientationWarning').style.display='none'">Continue Anyway</button>
-</div>
-
-<h1>🏎️ RaceFun 2 - Mobile Edition</h1>
-<div id="gameInfo">
-  <div class="info-box">Score: <span id="scoreDisplay">0</span></div>
-  <div class="info-box">High Score: <span id="highScoreDisplay">0</span></div>
-  <div class="info-box">Speed: <span id="speedDisplay">5</span></div>
-</div>
-
-<div id="gameContainer">
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
-</div>
-
-<div id="mobileControls">
-  <div id="leftBtn" class="control-btn">←</div>
-  <div id="rightBtn" class="control-btn">→</div>
-</div>
-
-<div id="gameButtons">
-  <button id="startButton">Start Game</button>
-  <button id="pauseButton">Pause</button>
-</div>
-
-<p>Use ← → arrows, A/D keys, or touch controls to move your car. Avoid the yellow obstacles!</p>
-<div id="instructions">
-  <p>Collect power-ups: <span style="color:#00ff00">Green</span> = Slow Down, <span style="color:#ff00ff">Pink</span> = Score Boost, <span style="color:#00ffff">Cyan</span> = Shield</p>
-</div>
-
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreDisplay = document.getElementById('scoreDisplay');
-const highScoreDisplay = document.getElementById('highScoreDisplay');
-const speedDisplay = document.getElementById('speedDisplay');
-const startButton = document.getElementById('startButton');
-const pauseButton = document.getElementById('pauseButton');
-const leftBtn = document.getElementById('leftBtn');
-const rightBtn = document.getElementById('rightBtn');
-
-// Adjust canvas size for mobile
-function resizeCanvas() {
-  const container = document.getElementById('gameContainer');
-  const containerWidth = container.clientWidth;
-  
-  // Maintain aspect ratio
-  const aspectRatio = 400 / 600;
-  let newWidth = Math.min(containerWidth, 400);
-  let newHeight = newWidth / aspectRatio;
-  
-  canvas.style.width = newWidth + 'px';
-  canvas.style.height = newHeight + 'px';
-  
-  // Set actual canvas resolution
-  canvas.width = 400;
-  canvas.height = 600;
-}
-
-// Initial resize
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-// Game constants
-const CAR_WIDTH = 40;
-const CAR_HEIGHT = 70;
-const POWERUP_TYPES = ['slow', 'boost', 'shield'];
-const POWERUP_COLORS = {
-  slow: '#00ff00',
-  boost: '#ff00ff',
-  shield: '#00ffff'
-};
-
-// Game state
-let car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
-let obstacles = [];
-let powerups = [];
-let keys = {};
-let score = 0;
-let highScore = localStorage.getItem('racefun2_highscore') || 0;
-let speed = 5;
-let gameOver = false;
-let gamePaused = false;
-let shieldActive = false;
-let shieldTimer = 0;
-let animationId;
-let lastTime = 0;
-let gameStarted = false;
-let touchControls = {
-  left: false,
-  right: false
-};
-
-// Initialize displays
-highScoreDisplay.textContent = highScore;
-
-// Keyboard controls
-document.addEventListener('keydown', e => {
-  keys[e.key] = true;
-  // Prevent arrow keys from scrolling the page
-  if(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
-    e.preventDefault();
-  }
-});
-document.addEventListener('keyup', e => keys[e.key] = false);
-
-// Touch controls for mobile
-function setupTouchControls() {
-  // Left button
-  leftBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    touchControls.left = true;
-  });
-  
-  leftBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    touchControls.left = false;
-  });
-  
-  leftBtn.addEventListener('touchcancel', (e) => {
-    e.preventDefault();
-    touchControls.left = false;
-  });
-  
-  // Right button
-  rightBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    touchControls.right = true;
-  });
-  
-  rightBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    touchControls.right = false;
-  });
-  
-  rightBtn.addEventListener('touchcancel', (e) => {
-    e.preventDefault();
-    touchControls.right = false;
-  });
-  
-  // Swipe controls for the game area
-  let touchStartX = 0;
-  
-  canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    touchStartX = e.touches[0].clientX;
-  });
-  
-  canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    if (!gameStarted || gamePaused || gameOver) return;
+    <div class="game-container">
+        <h1>🏎️ RaceFun 2</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div>Score</div>
+                <div id="scoreDisplay" class="info-value">0</div>
+            </div>
+            <div class="info-item">
+                <div>High Score</div>
+                <div id="highScoreDisplay" class="info-value">0</div>
+            </div>
+            <div class="info-item">
+                <div>Speed</div>
+                <div id="speedDisplay" class="info-value">5</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        
+        <div class="controls">
+            <button id="startButton">Start Game</button>
+            <button id="pauseButton">Pause</button>
+        </div>
+        
+        <div class="touch-controls">
+            <div id="leftBtn" class="touch-btn">←</div>
+            <div id="rightBtn" class="touch-btn">→</div>
+        </div>
+        
+        <div class="instructions">
+            <p>Use ← → arrows, A/D keys, or touch controls to move your car. Avoid the yellow obstacles!</p>
+            <div class="powerup-info">
+                <div class="powerup-item">
+                    <div class="powerup-color" style="background-color: #00ff00;"></div>
+                    <span>Slow Down</span>
+                </div>
+                <div class="powerup-item">
+                    <div class="powerup-color" style="background-color: #ff00ff;"></div>
+                    <span>Score Boost</span>
+                </div>
+                <div class="powerup-item">
+                    <div class="powerup-color" style="background-color: #00ffff;"></div>
+                    <span>Shield</span>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    const touchX = e.touches[0].clientX;
-    const diff = touchX - touchStartX;
-    
-    if (Math.abs(diff) > 10) {
-      if (diff > 0) {
-        // Swipe right
-        car.x = Math.min(canvas.width - car.width, car.x + 10);
-      } else {
-        // Swipe left
-        car.x = Math.max(0, car.x - 10);
-      }
-      touchStartX = touchX;
-    }
-  });
-}
+    <div id="gameOver" class="game-over">
+        <div class="game-over-content">
+            <h2>💥 Game Over!</h2>
+            <div class="final-score">Your Score: <span id="finalScore">0</span></div>
+            <div class="high-score">High Score: <span id="finalHighScore">0</span></div>
+            <button id="restartButton">Play Again</button>
+        </div>
+    </div>
 
-// Button event listeners
-startButton.addEventListener('click', startGame);
-pauseButton.addEventListener('click', togglePause);
+    <script>
+        // Game elements
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const startButton = document.getElementById('startButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const gameOverScreen = document.getElementById('gameOver');
+        const finalScore = document.getElementById('finalScore');
+        const finalHighScore = document.getElementById('finalHighScore');
+        const restartButton = document.getElementById('restartButton');
 
-// Initialize touch controls
-setupTouchControls();
+        // Game constants
+        const CAR_WIDTH = 40;
+        const CAR_HEIGHT = 70;
+        const POWERUP_TYPES = ['slow', 'boost', 'shield'];
+        const POWERUP_COLORS = {
+            slow: '#00ff00',
+            boost: '#ff00ff',
+            shield: '#00ffff'
+        };
 
-// Game functions
-function startGame() {
-  if (!gameStarted) {
-    resetGame();
-    gameStarted = true;
-    gamePaused = false;
-    lastTime = performance.now();
-    animationId = requestAnimationFrame(gameLoop);
-    startButton.textContent = 'Restart Game';
-  } else {
-    resetGame();
-    gamePaused = false;
-    lastTime = performance.now();
-    animationId = requestAnimationFrame(gameLoop);
-  }
-}
+        // Game state
+        let car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
+        let obstacles = [];
+        let powerups = [];
+        let keys = {};
+        let score = 0;
+        let highScore = localStorage.getItem('racefun2_highscore') || 0;
+        let speed = 5;
+        let gameOver = false;
+        let gamePaused = false;
+        let shieldActive = false;
+        let shieldTimer = 0;
+        let animationId;
+        let lastTime = 0;
+        let gameStarted = false;
+        let touchControls = {
+            left: false,
+            right: false
+        };
 
-function togglePause() {
-  if (!gameStarted) return;
-  
-  gamePaused = !gamePaused;
-  pauseButton.textContent = gamePaused ? 'Resume' : 'Pause';
-  
-  if (!gamePaused) {
-    lastTime = performance.now();
-    animationId = requestAnimationFrame(gameLoop);
-  }
-}
+        // Initialize displays
+        highScoreDisplay.textContent = highScore;
 
-function resetGame() {
-  car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
-  obstacles = [];
-  powerups = [];
-  score = 0;
-  speed = 5;
-  gameOver = false;
-  shieldActive = false;
-  shieldTimer = 0;
-  updateDisplays();
-}
+        // Set up event listeners
+        function setupEventListeners() {
+            // Keyboard controls
+            document.addEventListener('keydown', e => {
+                keys[e.key] = true;
+                if(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('keyup', e => keys[e.key] = false);
 
-function createObstacle() {
-  const width = 40 + Math.random() * 60;
-  const x = Math.random() * (canvas.width - width);
-  obstacles.push({ x, y: -60, width, height: 40 });
-}
+            // Button controls
+            startButton.addEventListener('click', startGame);
+            pauseButton.addEventListener('click', togglePause);
+            restartButton.addEventListener('click', restartGame);
 
-function createPowerup() {
-  const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
-  const x = Math.random() * (canvas.width - 30);
-  powerups.push({ x, y: -30, width: 30, height: 30, type });
-}
-
-function update(deltaTime) {
-  // Move car - check keyboard and touch controls
-  if (keys['ArrowLeft'] || keys['a'] || touchControls.left) car.x -= 6;
-  if (keys['ArrowRight'] || keys['d'] || touchControls.right) car.x += 6;
-
-  // Clamp car position
-  car.x = Math.max(0, Math.min(canvas.width - car.width, car.x));
-
-  // Move obstacles
-  obstacles.forEach(o => o.y += speed);
-  obstacles = obstacles.filter(o => o.y < canvas.height + 50);
-
-  // Move powerups
-  powerups.forEach(p => p.y += speed);
-  powerups = powerups.filter(p => p.y < canvas.height + 50);
-
-  // Check collisions with obstacles
-  if (!shieldActive) {
-    for (let o of obstacles) {
-      if (
-        car.x < o.x + o.width &&
-        car.x + car.width > o.x &&
-        car.y < o.y + o.height &&
-        car.y + car.height > o.y
-      ) {
-        gameOver = true;
-        if (score > highScore) {
-          highScore = score;
-          localStorage.setItem('racefun2_highscore', highScore);
-          highScoreDisplay.textContent = highScore;
+            // Touch controls
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                touchControls.left = true;
+            });
+            
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touchControls.left = false;
+            });
+            
+            leftBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                touchControls.left = false;
+            });
+            
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                touchControls.right = true;
+            });
+            
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touchControls.right = false;
+            });
+            
+            rightBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                touchControls.right = false;
+            });
+            
+            // Mouse controls for touch buttons (for testing on desktop)
+            leftBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                touchControls.left = true;
+            });
+            
+            leftBtn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                touchControls.left = false;
+            });
+            
+            leftBtn.addEventListener('mouseleave', (e) => {
+                e.preventDefault();
+                touchControls.left = false;
+            });
+            
+            rightBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                touchControls.right = true;
+            });
+            
+            rightBtn.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                touchControls.right = false;
+            });
+            
+            rightBtn.addEventListener('mouseleave', (e) => {
+                e.preventDefault();
+                touchControls.right = false;
+            });
         }
-      }
-    }
-  }
 
-  // Check collisions with powerups
-  for (let i = powerups.length - 1; i >= 0; i--) {
-    const p = powerups[i];
-    if (
-      car.x < p.x + p.width &&
-      car.x + car.width > p.x &&
-      car.y < p.y + p.height &&
-      car.y + car.height > p.y
-    ) {
-      applyPowerup(p.type);
-      powerups.splice(i, 1);
-    }
-  }
+        // Game functions
+        function startGame() {
+            if (!gameStarted) {
+                resetGame();
+                gameStarted = true;
+                gamePaused = false;
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(gameLoop);
+                startButton.textContent = 'Restart Game';
+            } else {
+                resetGame();
+                gamePaused = false;
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
 
-  // Update shield timer
-  if (shieldActive) {
-    shieldTimer -= deltaTime;
-    if (shieldTimer <= 0) {
-      shieldActive = false;
-    }
-  }
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+            gamePaused = false;
+            lastTime = performance.now();
+            animationId = requestAnimationFrame(gameLoop);
+        }
 
-  // Update score and difficulty
-  score += Math.floor(speed);
-  if (score % 200 === 0) speed += 0.5;
-  
-  // Randomly spawn obstacles and powerups
-  if (Math.random() < 0.03) createObstacle();
-  if (Math.random() < 0.01) createPowerup();
-  
-  updateDisplays();
-}
+        function togglePause() {
+            if (!gameStarted || gameOver) return;
+            
+            gamePaused = !gamePaused;
+            pauseButton.textContent = gamePaused ? 'Resume' : 'Pause';
+            
+            if (!gamePaused) {
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
 
-function applyPowerup(type) {
-  switch(type) {
-    case 'slow':
-      speed = Math.max(3, speed - 2);
-      break;
-    case 'boost':
-      score += 100;
-      break;
-    case 'shield':
-      shieldActive = true;
-      shieldTimer = 5000; // 5 seconds
-      break;
-  }
-}
+        function resetGame() {
+            car = { x: 180, y: 500, width: CAR_WIDTH, height: CAR_HEIGHT };
+            obstacles = [];
+            powerups = [];
+            score = 0;
+            speed = 5;
+            gameOver = false;
+            shieldActive = false;
+            shieldTimer = 0;
+            updateDisplays();
+        }
 
-function updateDisplays() {
-  scoreDisplay.textContent = score;
-  speedDisplay.textContent = speed.toFixed(1);
-}
+        function createObstacle() {
+            const width = 40 + Math.random() * 60;
+            const x = Math.random() * (canvas.width - width);
+            obstacles.push({ x, y: -60, width, height: 40 });
+        }
 
-function draw() {
-  // Clear canvas
-  ctx.fillStyle = '#222';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function createPowerup() {
+            const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+            const x = Math.random() * (canvas.width - 30);
+            powerups.push({ x, y: -30, width: 30, height: 30, type });
+        }
 
-  // Draw road
-  ctx.fillStyle = '#444';
-  ctx.fillRect(60, 0, canvas.width - 120, canvas.height);
+        function update(deltaTime) {
+            // Move car - check keyboard and touch controls
+            if (keys['ArrowLeft'] || keys['a'] || touchControls.left) car.x -= 6;
+            if (keys['ArrowRight'] || keys['d'] || touchControls.right) car.x += 6;
 
-  // Draw road markings
-  ctx.strokeStyle = '#ccc';
-  ctx.setLineDash([20, 20]);
-  ctx.beginPath();
-  ctx.moveTo(canvas.width/2, 0);
-  ctx.lineTo(canvas.width/2, canvas.height);
-  ctx.stroke();
-  ctx.setLineDash([]);
+            // Clamp car position
+            car.x = Math.max(0, Math.min(canvas.width - car.width, car.x));
 
-  // Draw side barriers
-  ctx.fillStyle = '#888';
-  ctx.fillRect(0, 0, 60, canvas.height);
-  ctx.fillRect(canvas.width - 60, 0, 60, canvas.height);
+            // Move obstacles
+            obstacles.forEach(o => o.y += speed);
+            obstacles = obstacles.filter(o => o.y < canvas.height);
 
-  // Draw car with shield effect
-  if (shieldActive) {
-    ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-    ctx.beginPath();
-    ctx.arc(car.x + car.width/2, car.y + car.height/2, Math.max(car.width, car.height)/2 + 5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  
-  ctx.fillStyle = 'red';
-  ctx.fillRect(car.x, car.y, car.width, car.height);
-  
-  // Draw car details
-  ctx.fillStyle = 'black';
-  ctx.fillRect(car.x + 5, car.y + 5, car.width - 10, 15); // windshield
-  ctx.fillRect(car.x + 5, car.y + car.height - 20, car.width - 10, 15); // rear window
-  
-  // Draw obstacles
-  ctx.fillStyle = 'yellow';
-  obstacles.forEach(o => {
-    ctx.fillRect(o.x, o.y, o.width, o.height);
-    // Add obstacle details
-    ctx.fillStyle = 'orange';
-    ctx.fillRect(o.x + 5, o.y + 5, o.width - 10, 10);
-    ctx.fillStyle = 'yellow';
-  });
+            // Move powerups
+            powerups.forEach(p => p.y += speed);
+            powerups = powerups.filter(p => p.y < canvas.height);
 
-  // Draw powerups
-  powerups.forEach(p => {
-    ctx.fillStyle = POWERUP_COLORS[p.type];
-    ctx.beginPath();
-    ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Add powerup icon
-    ctx.fillStyle = 'white';
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    let symbol = '?';
-    switch(p.type) {
-      case 'slow': symbol = '↓'; break;
-      case 'boost': symbol = '↑'; break;
-      case 'shield': symbol = '⛨'; break;
-    }
-    
-    ctx.fillText(symbol, p.x + p.width/2, p.y + p.height/2);
-  });
+            // Check collisions with obstacles
+            if (!shieldActive) {
+                for (let o of obstacles) {
+                    if (
+                        car.x < o.x + o.width &&
+                        car.x + car.width > o.x &&
+                        car.y < o.y + o.height &&
+                        car.y + car.height > o.y
+                    ) {
+                        endGame();
+                        return;
+                    }
+                }
+            }
 
-  // Draw score
-  ctx.fillStyle = 'white';
-  ctx.font = '20px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText('Score: ' + score, 10, 30);
+            // Check collisions with powerups
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                const p = powerups[i];
+                if (
+                    car.x < p.x + p.width &&
+                    car.x + car.width > p.x &&
+                    car.y < p.y + p.height &&
+                    car.y + car.height > p.y
+                ) {
+                    applyPowerup(p.type);
+                    powerups.splice(i, 1);
+                }
+            }
 
-  // Draw speed
-  ctx.textAlign = 'right';
-  ctx.fillText('Speed: ' + speed.toFixed(1), canvas.width - 10, 30);
+            // Update shield timer
+            if (shieldActive) {
+                shieldTimer -= deltaTime;
+                if (shieldTimer <= 0) {
+                    shieldActive = false;
+                }
+            }
 
-  // Draw game over screen
-  if (gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, canvas.height/2 - 80, canvas.width, 160);
-    ctx.fillStyle = 'white';
-    ctx.font = '26px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('💥 Crash!', canvas.width/2, canvas.height/2 - 30);
-    ctx.font = '20px Arial';
-    ctx.fillText('Score: ' + score, canvas.width/2, canvas.height/2);
-    ctx.fillText('High Score: ' + highScore, canvas.width/2, canvas.height/2 + 30);
-    ctx.fillText('Press Start to play again', canvas.width/2, canvas.height/2 + 60);
-  }
+            // Update score and difficulty
+            score += Math.floor(speed / 2);
+            if (score % 200 === 0) speed += 0.5;
+            
+            // Randomly spawn obstacles and powerups
+            if (Math.random() < 0.03) createObstacle();
+            if (Math.random() < 0.01) createPowerup();
+            
+            updateDisplays();
+        }
 
-  // Draw pause screen
-  if (gamePaused && !gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
-    ctx.fillStyle = 'white';
-    ctx.font = '26px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('⏸️ Game Paused', canvas.width/2, canvas.height/2);
-    ctx.font = '18px Arial';
-    ctx.fillText('Press Resume to continue', canvas.width/2, canvas.height/2 + 30);
-  }
-}
+        function applyPowerup(type) {
+            switch(type) {
+                case 'slow':
+                    speed = Math.max(3, speed - 2);
+                    break;
+                case 'boost':
+                    score += 100;
+                    break;
+                case 'shield':
+                    shieldActive = true;
+                    shieldTimer = 5000; // 5 seconds
+                    break;
+            }
+        }
 
-function gameLoop(timestamp) {
-  if (!lastTime) lastTime = timestamp;
-  const deltaTime = timestamp - lastTime;
-  lastTime = timestamp;
+        function updateDisplays() {
+            scoreDisplay.textContent = score;
+            speedDisplay.textContent = speed.toFixed(1);
+        }
 
-  if (!gamePaused && !gameOver) {
-    update(deltaTime);
-  }
-  
-  draw();
-  
-  if (!gameOver) {
-    animationId = requestAnimationFrame(gameLoop);
-  }
-}
+        function endGame() {
+            gameOver = true;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('racefun2_highscore', highScore);
+                highScoreDisplay.textContent = highScore;
+            }
+            
+            finalScore.textContent = score;
+            finalHighScore.textContent = highScore;
+            gameOverScreen.style.display = 'flex';
+        }
 
-// Prevent context menu on long press
-document.addEventListener('contextmenu', e => e.preventDefault());
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-// Initial draw
-draw();
-</script>
+            // Draw road
+            ctx.fillStyle = '#333';
+            ctx.fillRect(60, 0, canvas.width - 120, canvas.height);
+
+            // Draw road markings
+            ctx.strokeStyle = '#ccc';
+            ctx.setLineDash([20, 20]);
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0);
+            ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw side barriers
+            ctx.fillStyle = '#555';
+            ctx.fillRect(0, 0, 60, canvas.height);
+            ctx.fillRect(canvas.width - 60, 0, 60, canvas.height);
+
+            // Draw car with shield effect
+            if (shieldActive) {
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(car.x + car.width/2, car.y + car.height/2, Math.max(car.width, car.height)/2 + 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw car body
+            ctx.fillStyle = 'red';
+            ctx.fillRect(car.x, car.y, car.width, car.height);
+            
+            // Draw car details
+            ctx.fillStyle = '#222';
+            ctx.fillRect(car.x + 5, car.y + 5, car.width - 10, 15); // windshield
+            ctx.fillRect(car.x + 5, car.y + car.height - 20, car.width - 10, 15); // rear window
+            ctx.fillRect(car.x + 5, car.y + 25, 10, car.height - 50); // left window
+            ctx.fillRect(car.x + car.width - 15, car.y + 25, 10, car.height - 50); // right window
+            
+            // Draw wheels
+            ctx.fillStyle = '#333';
+            ctx.fillRect(car.x - 3, car.y + 10, 6, 15); // front left
+            ctx.fillRect(car.x - 3, car.y + car.height - 25, 6, 15); // rear left
+            ctx.fillRect(car.x + car.width - 3, car.y + 10, 6, 15); // front right
+            ctx.fillRect(car.x + car.width - 3, car.y + car.height - 25, 6, 15); // rear right
+
+            // Draw obstacles
+            ctx.fillStyle = 'yellow';
+            obstacles.forEach(o => {
+                ctx.fillRect(o.x, o.y, o.width, o.height);
+                // Add obstacle details
+                ctx.fillStyle = 'orange';
+                ctx.fillRect(o.x + 5, o.y + 5, o.width - 10, 10);
+                ctx.fillStyle = 'yellow';
+            });
+
+            // Draw powerups
+            powerups.forEach(p => {
+                ctx.fillStyle = POWERUP_COLORS[p.type];
+                ctx.beginPath();
+                ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add powerup icon
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                let symbol = '?';
+                switch(p.type) {
+                    case 'slow': symbol = '↓'; break;
+                    case 'boost': symbol = '↑'; break;
+                    case 'shield': symbol = '⛨'; break;
+                }
+                
+                ctx.fillText(symbol, p.x + p.width/2, p.y + p.height/2);
+            });
+
+            // Draw score
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Score: ' + score, 10, 30);
+
+            // Draw speed
+            ctx.textAlign = 'right';
+            ctx.fillText('Speed: ' + speed.toFixed(1), canvas.width - 10, 30);
+
+            // Draw pause screen
+            if (gamePaused && !gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
+                ctx.fillStyle = 'white';
+                ctx.font = '26px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('⏸️ Game Paused', canvas.width/2, canvas.height/2);
+                ctx.font = '18px Arial';
+                ctx.fillText('Press Resume to continue', canvas.width/2, canvas.height/2 + 30);
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (!gamePaused && !gameOver) {
+                update(deltaTime);
+            }
+            
+            draw();
+            
+            if (!gameOver) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Initialize the game
+        setupEventListeners();
+        draw();
+    </script>
 </body>
 </html>
