@@ -73,7 +73,7 @@ function draw() {
   ctx.fillRect(car.x, car.y, car.width, car.height);
 
   // obstacles
-  ctx.fillStyle = 'yellow';
+  ctx.fillStyle = 'red';
   obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.width, o.height));
 
   // score
